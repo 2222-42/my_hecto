@@ -1,3 +1,5 @@
+use std::env;
+
 use crate::{Document, Row, Terminal};
 
 use termion::event::Key;
@@ -34,11 +36,18 @@ impl Editor {
     }
 
     pub fn default() -> Self {
+        let args: Vec<String> = env::args().collect();
+        let document = if args.len() > 1 {
+            let file_name = &args[1];
+            Document::open(&file_name).unwrap_or_default()
+        } else {
+            Document::default()
+        };
         Editor {
             should_quit: false,
             terminal: Terminal::default().expect("Failed to initialize terminal."),
             cursor_position: Position::default(),
-            document: Document::open(),
+            document,
         }
     }
 
@@ -102,7 +111,7 @@ impl Editor {
     }
 
     fn draw_welcome_message(&self) {
-        let mut welcome_message = format!("Hecto editro -- version {}", VERSION);
+        let mut welcome_message = format!("Hecto editor -- version {}", VERSION);
         let width = self.terminal.size().width as usize;
         let len = welcome_message.len();
         let padding = width.saturating_sub(len) / 2;
