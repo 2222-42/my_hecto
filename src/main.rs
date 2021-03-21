@@ -17,6 +17,7 @@ pub use editor::Position;
 pub use editor::SearchDirection;
 pub use row::Row;
 pub use terminal::Terminal;
+mod highlighting;
 
 fn main() {
     Editor::default().run();
