@@ -3,7 +3,7 @@ use std::{cmp, usize};
 use termion::color;
 use unicode_segmentation::UnicodeSegmentation;
 
-use crate::{highlighting, SearchDirection};
+use crate::{highlighting, HighlightingOptions, SearchDirection};
 
 #[derive(Default)]
 pub struct Row {
@@ -176,7 +176,7 @@ impl Row {
         None
     }
 
-    pub fn highlight(&mut self, word: Option<&str>) {
+    pub fn highlight(&mut self, opts: HighlightingOptions, word: Option<&str>) {
         let mut highlighting = Vec::new();
         let chars: Vec<char> = self.string.chars().collect();
         let mut matches = Vec::new();
@@ -214,11 +214,15 @@ impl Row {
             } else {
                 &highlighting::Type::None
             };
-            if (c.is_ascii_digit()
-                && (prev_is_separator || previous_highlight == &highlighting::Type::Number))
-                || (c == &'.' && previous_highlight == &highlighting::Type::Number)
-            {
-                highlighting.push(highlighting::Type::Number);
+            if opts.numbers() {
+                if (c.is_ascii_digit()
+                    && (prev_is_separator || previous_highlight == &highlighting::Type::Number))
+                    || (c == &'.' && previous_highlight == &highlighting::Type::Number)
+                {
+                    highlighting.push(highlighting::Type::Number);
+                } else {
+                    highlighting.push(highlighting::Type::None);
+                }
             } else {
                 highlighting.push(highlighting::Type::None);
             }

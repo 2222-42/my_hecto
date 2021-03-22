@@ -3,9 +3,9 @@ pub struct FileType {
     hl_opts: HighlightingOptions,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct HighlightingOptions {
-    pub numbers: bool,
+    numbers: bool,
 }
 
 impl Default for FileType {
@@ -22,6 +22,10 @@ impl FileType {
         self.name.clone()
     }
 
+    pub fn highlighting_options(&self) -> HighlightingOptions {
+        self.hl_opts
+    }
+
     pub fn from(file_name: &str) -> Self {
         if file_name.ends_with(".rs") {
             return Self {
@@ -30,5 +34,11 @@ impl FileType {
             };
         }
         Self::default()
+    }
+}
+
+impl HighlightingOptions {
+    pub fn numbers(self) -> bool {
+        self.numbers
     }
 }
