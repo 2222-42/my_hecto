@@ -110,13 +110,13 @@ impl Editor {
     }
 
     fn save(&mut self) {
-        if self.document.filename.is_none() {
+        if self.document.file_name.is_none() {
             let new_name = self.prompt("Save as: ", |_, _, _| {}).unwrap_or(None);
             if new_name.is_none() {
                 self.status_message = StatusMesage::from("Save aborted.".to_string());
                 return;
             };
-            self.document.filename = new_name;
+            self.document.file_name = new_name;
         }
         if self.document.save().is_ok() {
             self.status_message = StatusMesage::from("File saved successfully.".to_string());
@@ -342,7 +342,7 @@ impl Editor {
             ""
         };
         let mut file_name = "[No Name]".to_string();
-        if let Some(name) = &self.document.filename {
+        if let Some(name) = &self.document.file_name {
             file_name = name.clone();
             file_name.truncate(20);
         }
@@ -354,7 +354,8 @@ impl Editor {
         );
 
         let line_indicator = format!(
-            "{}/{}",
+            "{} | {}/{}",
+            self.document.file_type(),
             self.cursor_position.y.saturating_add(1),
             self.document.len()
         );
