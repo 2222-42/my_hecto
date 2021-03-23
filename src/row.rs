@@ -139,19 +139,16 @@ impl Row {
         if at > self.len || query.is_empty() {
             return None;
         }
-
         let start = if direction == SearchDirection::Forward {
             at
         } else {
             0
         };
-
         let end = if direction == SearchDirection::Forward {
             self.len
         } else {
             at
         };
-
         #[allow(clippy::integer_arithmetic)]
         let substring: String = self.string[..]
             .graphemes(true)
@@ -168,7 +165,7 @@ impl Row {
                 substring[..].grapheme_indices(true).enumerate()
             {
                 if matching_byte_index == byte_index {
-                    #[allow(clippy::clippy::integer_arithmetic)]
+                    #[allow(clippy::integer_arithmetic)]
                     return Some(start + grapheme_index);
                 }
             }
@@ -183,7 +180,6 @@ impl Row {
             }
             let mut index = 0;
             while let Some(search_match) = self.find(word, index, SearchDirection::Forward) {
-                println!("{}", search_match);
                 if let Some(next_index) = search_match.checked_add(word[..].graphemes(true).count())
                 {
                     for i in search_match..next_index {
@@ -356,5 +352,13 @@ mod test_super {
             ],
             row.highlighting
         )
+    }
+
+    #[test]
+    fn test_find() {
+        let row = Row::from("1testtest");
+        assert_eq!(row.find("t", 0, SearchDirection::Forward), Some(1));
+        assert_eq!(row.find("t", 2, SearchDirection::Forward), Some(4));
+        assert_eq!(row.find("t", 5, SearchDirection::Forward), Some(5));
     }
 }
