@@ -18,9 +18,11 @@ impl Document {
         let contents = fs::read_to_string(filename)?;
         let file_type = FileType::from(filename);
         let mut rows = Vec::new();
+        let mut start_with_comment = false;
         for value in contents.lines() {
             let mut row = Row::from(value);
-            row.highlight(&file_type.highlighting_options(), None);
+            start_with_comment =
+                row.highlight(&file_type.highlighting_options(), None, start_with_comment);
             rows.push(row);
         }
         Ok(Self {
@@ -57,9 +59,7 @@ impl Document {
         }
         #[allow(clippy::indexing_slicing)]
         let current_row = &mut self.rows[at.y];
-        let mut new_row = current_row.split(at.x);
-        current_row.highlight(&self.file_type.highlighting_options(), None);
-        new_row.highlight(&self.file_type.highlighting_options(), None);
+        let new_row = current_row.split(at.x);
         #[allow(clippy::integer_arithmetic)]
         self.rows.insert(at.y + 1, new_row);
     }
@@ -71,9 +71,7 @@ impl Document {
         self.dirty = true;
         if c == '\n' {
             self.insert_newline(at);
-            return;
-        }
-        if at.y == self.rows.len() {
+        } else if at.y == self.rows.len() {
             let mut row = Row::default();
             row.insert(0, c);
             self.rows.push(row);
@@ -82,6 +80,7 @@ impl Document {
             let row = &mut self.rows[at.y];
             row.insert(at.x, c);
         }
+        self.highlight(None)
     }
 
     #[allow(clippy::integer_arithmetic, clippy::indexing_slicing)]
@@ -96,11 +95,9 @@ impl Document {
             let next_row = self.rows.remove(at.y + 1);
             let row = &mut self.rows[at.y];
             row.append(&next_row);
-            row.highlight(&self.file_type.highlighting_options(), None);
         } else {
             let row = &mut self.rows[at.y];
             row.delete(at.x);
-            row.highlight(&self.file_type.highlighting_options(), None);
         }
     }
 
@@ -108,10 +105,15 @@ impl Document {
         if let Some(file_name) = &self.file_name {
             let mut file = fs::File::create(file_name)?;
             self.file_type = FileType::from(file_name);
+            let mut start_with_comment = false;
             for row in &mut self.rows {
                 file.write_all(row.as_bytes())?;
                 file.write_all(b"\n")?;
-                row.highlight(&self.file_type.highlighting_options(), None)
+                start_with_comment = row.highlight(
+                    &self.file_type.highlighting_options(),
+                    None,
+                    start_with_comment,
+                );
             }
             self.dirty = false;
         }
@@ -163,8 +165,13 @@ impl Document {
     }
 
     pub fn highlight(&mut self, word: Option<&str>) {
+        let mut start_with_comment = false;
         for row in &mut self.rows {
-            row.highlight(&self.file_type.highlighting_options(), word);
+            start_with_comment = row.highlight(
+                &self.file_type.highlighting_options(),
+                word,
+                start_with_comment,
+            );
         }
     }
 }
